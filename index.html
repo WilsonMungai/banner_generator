@@ -89,46 +89,36 @@
 
                     ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
-                    // Move countdown below logo
+                    // === Countdown Below Logo ===
                     const countdownY = logoY + logoHeight + 80;
-
                     ctx.fillStyle = "#fff";
-                    ctx.font = "bold 100px monospace";
                     ctx.textAlign = "left";
+                    ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-                    resolve(); // Drawing complete
+                    resolve(); // ✅ Drawing complete after logo is rendered
                 };
 
                 logoImage.onerror = () => {
                     console.error("Logo image failed to load.");
 
-                    // fallback if logo fails
+                    // fallback countdown position if logo fails
                     const fallbackY = eventY + 80;
                     const countdownY = fallbackY + 100;
 
                     ctx.fillStyle = "#fff";
-                    ctx.font = "bold 100px monospace";
                     ctx.textAlign = "left";
+                    ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-                    resolve();
+                    resolve(); // ✅ Still complete even if logo fails
                 };
-
-                // === Countdown Text Below Container ===
-                const countdownY = eventY + 100;
-                ctx.fillStyle = "#fff";
-                ctx.textAlign = "left";
-                ctx.font = "bold 100px monospace";
-                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
-
-                resolve();
             };
 
             userImage.onerror = () => {
-                console.error("Image failed to load. Drawing without it.");
+                console.error("Main image failed to load. Drawing fallback.");
 
-                // Draw fallback background
+                // Fallback: Just text on pink background
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -182,7 +172,7 @@
 
             if (data.type === "trip") {
                 ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
-                await drawBanner(data); // wait for image to draw
+                await drawBanner(data); // wait for all drawing (including logo)
 
                 ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
                 const imageUrl = await uploadToCloudinary();
