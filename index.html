@@ -41,15 +41,20 @@
                 const imgY = 0;
                 ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
 
-                // Draw text
+                // Trip Text (starts below image)
+                const textYStart = 320;
+                const lineSpacing = 70;
+
                 ctx.fillStyle = "#fff";
                 ctx.font = "bold 60px sans-serif";
-                ctx.fillText(cruiseName, 50, 100);
+                ctx.fillText(cruiseName, 50, textYStart);
+
                 ctx.font = "40px sans-serif";
-                ctx.fillText("Destination: " + destination, 50, 180);
-                ctx.fillText("Sailing on: " + sailDate, 50, 250);
+                ctx.fillText("Destination: " + destination, 50, textYStart + lineSpacing);
+                ctx.fillText("Sailing on: " + sailDate, 50, textYStart + 2 * lineSpacing);
+
                 ctx.font = "bold 100px monospace";
-                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
+                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, textYStart + 3.5 * lineSpacing);
 
                 resolve(); // tell caller we finished drawing
             };
