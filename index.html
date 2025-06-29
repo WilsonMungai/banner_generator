@@ -21,7 +21,7 @@
     let formData = new FormData();
 
     async function drawBanner(data) {
-        const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName } = data;
+        const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName, logoUrl } = data;
 
         const userImage = new Image();
         userImage.crossOrigin = "anonymous";
@@ -75,6 +75,45 @@
                 ctx.textAlign = "center";
                 ctx.font = "bold 60px sans-serif";
                 ctx.fillText(eventName, canvas.width / 2, eventY);
+
+                // === Logo Image Below Event Name ===
+                const logoImage = new Image();
+                logoImage.crossOrigin = "anonymous";
+                logoImage.src = logoUrl;
+
+                logoImage.onload = () => {
+                    const logoWidth = 400;
+                    const logoHeight = 100;
+                    const logoX = (canvas.width - logoWidth) / 2;
+                    const logoY = eventY + 40;
+
+                    ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+
+                    // Move countdown below logo
+                    const countdownY = logoY + logoHeight + 80;
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 100px monospace";
+                    ctx.textAlign = "left";
+                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+
+                    resolve(); // Drawing complete
+                };
+
+                logoImage.onerror = () => {
+                    console.error("Logo image failed to load.");
+
+                    // fallback if logo fails
+                    const fallbackY = eventY + 80;
+                    const countdownY = fallbackY + 100;
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 100px monospace";
+                    ctx.textAlign = "left";
+                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+
+                    resolve();
+                };
 
                 // === Countdown Text Below Container ===
                 const countdownY = eventY + 100;
