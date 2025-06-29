@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script
+      src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"
+      type="text/javascript"
+    ></script>
+    <title>Cruise Countdown Generator</title>
+  </head>
+  <body style="margin: 0; background-color: #000; color: #fff;">
+    <canvas id="bannerCanvas" width="1200" height="630"></canvas>
+  </body>
+
+  <script>
+    const canvas = document.getElementById("bannerCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let cloudUrl = "";
+    let formData = new FormData();
+
+    function drawBanner({ cruiseName, destination, sailDate, days, hours, mins, imageUrl }) {
+      const userImage = new Image();
+      userImage.crossOrigin = "anonymous";
+      userImage.src = imageUrl;
+
+      userImage.onload = () => {
+        // Draw background
+        ctx.fillStyle = "#FF2DAE";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw user image at the top
+        const imgHeight = 300;
+        const imgWidth = canvas.width;
+        ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
+
+        // Text layout starts below image
+        const textYStart = imgHeight + 20;
+        const lineSpacing = 70;
+
+        ctx.fillStyle = "#fff";
+
+        ctx.font = "bold 60px sans-serif";
+        ctx.fillText(cruiseName, 50, textYStart);
+
+        ctx.font = "40px sans-serif";
+        ctx.fillText("Destination: " + destination, 50, textYStart + lineSpacing);
+        ctx.fillText("Sailing on: " + sailDate, 50, textYStart + 2 * lineSpacing);
+
+        ctx.font = "bold 100px monospace";
+        ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, textYStart + 3.5 * lineSpacing);
+      };
+
+      userImage.onerror = () => {
+        console.error("Image failed to load. Proceeding without it.");
+
+        // Draw background
+        ctx.fillStyle = "#FF2DAE";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const textYStart = 100;
+        const lineSpacing = 70;
+
+        ctx.fillStyle = "#fff";
+
+        ctx.font = "bold 60px sans-serif";
+        ctx.fillText(cruiseName, 50, textYStart);
+
+        ctx.font = "40px sans-serif";
+        ctx.fillText("Destination: " + destination, 50, textYStart + lineSpacing);
+        ctx.fillText("Sailing on: " + sailDate, 50, textYStart + 2 * lineSpacing);
+
+        ctx.font = "bold 100px monospace";
+        ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, textYStart + 3.5 * lineSpacing);
+      };
+    }
+
+    function uploadToCloudinary() {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(async (blob) => {
+          formData.set("file", blob);
+          try {
+            const response = await fetch(cloudUrl, {
+              method: "POST",
+              body: formData,
+            });
+            const result = await response.json();
+            if (result.secure_url) {
+              resolve(result.secure_url);
+            } else {
+              reject(result.error.message);
+            }
+          } catch (error) {
+            reject(error.message);
+          }
+        }, "image/png");
+      });
+    }
+
+    ThunkableWebviewerExtension.receiveMessage(async (message) => {
+      try {
+        const data = JSON.parse(message);
+        if (data.type === "setKey") {
+          const { cloudName, apiKey, preset } = data;
+          cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+          formData.append("upload_preset", preset);
+          formData.append("api_key", apiKey);
+        }
+
+        if (data.type === "trip") {
+          drawBanner(data);
+
+          ThunkableWebviewerExtension.postMessage(
+            JSON.stringify({ type: "uploading" })
+          );
+
+          const imageUrl = await uploadToCloudinary();
+
+          ThunkableWebviewerExtension.postMessage(
+            JSON.stringify({ type: "image", url: imageUrl })
+          );
+        }
+      } catch (error) {
+        ThunkableWebviewerExtension.postMessage(
+          JSON.stringify({ type: "error", message: error.toString() })
+        );
+      }
+    });
+
+    ThunkableWebviewerExtension.postMessage(
+      JSON.stringify({ type: "page loaded" })
+    );
+  </script>
+</html>
