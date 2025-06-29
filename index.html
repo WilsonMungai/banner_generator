@@ -1,197 +1,150 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"
-        type="text/javascript"></script>
-    <title>Cruise Countdown Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cruise Countdown Banner</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    canvas {
+      border: 2px solid white;
+      margin-top: 20px;
+    }
+  </style>
 </head>
+<body>
 
-<body style="margin: 0; background-color: #000; color: #fff;">
-    <canvas id="bannerCanvas" width="1200" height="630"></canvas>
-</body>
+  <h1>Cruise Countdown Banner</h1>
+  <canvas id="bannerCanvas" width="1200" height="800"></canvas>
 
-<script>
+  <script>
     const canvas = document.getElementById("bannerCanvas");
     const ctx = canvas.getContext("2d");
 
-    let cloudUrl = "";
-    let formData = new FormData();
+    async function drawBanner({
+      cruiseName,
+      destination,
+      sailDate,
+      days,
+      hours,
+      mins,
+      imageUrl,
+      logoUrl,
+      eventName
+    }) {
+      const userImage = new Image();
+      userImage.crossOrigin = "anonymous";
+      userImage.src = imageUrl;
 
-    async function drawBanner(data) {
-        const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName, logoUrl } = data;
+      return new Promise((resolve) => {
+        userImage.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const userImage = new Image();
-        userImage.crossOrigin = "anonymous";
-        userImage.src = imageUrl;
+          // Background color
+          ctx.fillStyle = "#FF2DAE";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        return new Promise((resolve) => {
-            userImage.onload = () => {
-                // Draw background
-                ctx.fillStyle = "#FF2DAE";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // Draw User Image (430x262, centered)
+          const imgWidth = 430;
+          const imgHeight = 262;
+          const imgX = (canvas.width - imgWidth) / 2;
+          const imgY = 20;
+          ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
 
-                // Draw user image
-                const imgHeight = 300;
-                const imgWidth = canvas.width;
-                ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
+          // Blue container under image
+          const containerY = imgY + imgHeight + 20;
+          const containerHeight = 100;
+          ctx.fillStyle = "#00FFFF";
+          ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
-                // === Blue Container ===
-                const containerY = imgHeight;
-                const containerHeight = 180;
-                ctx.fillStyle = "#00FFFF";
-                ctx.fillRect(0, containerY, canvas.width, containerHeight);
+          // Border lines
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(0, containerY);
+          ctx.lineTo(canvas.width, containerY);
+          ctx.moveTo(0, containerY + containerHeight);
+          ctx.lineTo(canvas.width, containerY + containerHeight);
+          ctx.stroke();
 
-                // Top and bottom border (0.5px black)
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(0, containerY);
-                ctx.lineTo(canvas.width, containerY);
-                ctx.moveTo(0, containerY + containerHeight);
-                ctx.lineTo(canvas.width, containerY + containerHeight);
-                ctx.stroke();
+          // Blue container text
+          ctx.fillStyle = "#000";
+          ctx.font = "bold 16px sans-serif";
+          ctx.textAlign = "center";
 
-                // Centered text inside blue container
-                ctx.fillStyle = "#000";
-                ctx.textAlign = "center";
+          const centerX = canvas.width / 2;
+          const textYStart = containerY + 30;
+          const spacing = 25;
 
-                const centerX = canvas.width / 2;
-                const textYStart = containerY + 50;
-                const lineSpacing = 40;
+          ctx.fillText(cruiseName.toUpperCase(), centerX, textYStart);
+          ctx.fillText(("Destination: " + destination).toUpperCase(), centerX, textYStart + spacing);
+          ctx.fillText(("Sailing on: " + sailDate).toUpperCase(), centerX, textYStart + spacing * 2);
 
-                ctx.font = "bold 40px sans-serif";
-                ctx.fillText(cruiseName, centerX, textYStart);
+          // Event name (bold, uppercase, 20px)
+          const eventY = containerY + containerHeight + 40;
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 20px sans-serif";
+          ctx.fillText(eventName.toUpperCase(), centerX, eventY);
 
-                ctx.font = "30px sans-serif";
-                ctx.fillText("Destination: " + destination, centerX, textYStart + lineSpacing);
-                ctx.fillText("Sailing on: " + sailDate, centerX, textYStart + 2 * lineSpacing);
+          // Load and draw logo
+          const logoImage = new Image();
+          logoImage.crossOrigin = "anonymous";
+          logoImage.src = logoUrl;
 
-                // === Event Name Below Blue Container ===
-                const eventY = containerY + containerHeight + 50;
-                ctx.fillStyle = "#fff";
-                ctx.textAlign = "center";
-                ctx.font = "bold 60px sans-serif";
-                ctx.fillText(eventName, canvas.width / 2, eventY);
+          logoImage.onload = () => {
+            const logoWidth = 400;
+            const logoHeight = 100;
+            const logoX = (canvas.width - logoWidth) / 2;
+            const logoY = eventY + 20;
+            ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
-                // === Logo Image Below Event Name ===
-                const logoImage = new Image();
-                logoImage.crossOrigin = "anonymous";
-                logoImage.src = logoUrl;
+            // Countdown text below logo
+            const countdownY = logoY + logoHeight + 60;
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 100px monospace";
+            ctx.textAlign = "left";
+            ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-                logoImage.onload = () => {
-                    const logoWidth = 400;
-                    const logoHeight = 100;
-                    const logoX = (canvas.width - logoWidth) / 2;
-                    const logoY = eventY + 40;
+            resolve();
+          };
 
-                    ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+          logoImage.onerror = () => {
+            // Fallback if logo fails
+            const fallbackY = eventY + 100;
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 100px monospace";
+            ctx.textAlign = "left";
+            ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, fallbackY);
+            resolve();
+          };
+        };
 
-                    // === Countdown Below Logo ===
-                    const countdownY = logoY + logoHeight + 80;
-                    ctx.fillStyle = "#fff";
-                    ctx.textAlign = "left";
-                    ctx.font = "bold 100px monospace";
-                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+        userImage.onerror = () => {
+          // Fallback if user image fails
+          ctx.fillStyle = "#FF2DAE";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    resolve(); // ✅ Drawing complete after logo is rendered
-                };
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 60px sans-serif";
+          ctx.fillText(cruiseName, 50, 100);
+          ctx.font = "40px sans-serif";
+          ctx.fillText("Destination: " + destination, 50, 180);
+          ctx.fillText("Sailing on: " + sailDate, 50, 250);
+          ctx.font = "bold 100px monospace";
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
 
-                logoImage.onerror = () => {
-                    console.error("Logo image failed to load.");
-
-                    // fallback countdown position if logo fails
-                    const fallbackY = eventY + 80;
-                    const countdownY = fallbackY + 100;
-
-                    ctx.fillStyle = "#fff";
-                    ctx.textAlign = "left";
-                    ctx.font = "bold 100px monospace";
-                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
-
-                    resolve(); // ✅ Still complete even if logo fails
-                };
-            };
-
-            userImage.onerror = () => {
-                console.error("Main image failed to load. Drawing fallback.");
-
-                // Fallback: Just text on pink background
-                ctx.fillStyle = "#FF2DAE";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 60px sans-serif";
-                ctx.fillText(cruiseName, 50, 100);
-                ctx.font = "40px sans-serif";
-                ctx.fillText("Destination: " + destination, 50, 180);
-                ctx.fillText("Sailing on: " + sailDate, 50, 250);
-                ctx.font = "bold 100px monospace";
-                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
-
-                resolve();
-            };
-        });
+          resolve();
+        };
+      });
     }
-
-    function uploadToCloudinary() {
-        return new Promise((resolve, reject) => {
-            canvas.toBlob(async (blob) => {
-                formData.set("file", blob);
-                try {
-                    const response = await fetch(cloudUrl, {
-                        method: "POST",
-                        body: formData,
-                    });
-                    const result = await response.json();
-                    if (result.secure_url) {
-                        resolve(result.secure_url);
-                    } else {
-                        reject(result.error.message);
-                    }
-                } catch (error) {
-                    reject(error.message);
-                }
-            }, "image/png");
-        });
-    }
-
-    // Handle messages from Thunkable
-    ThunkableWebviewerExtension.receiveMessage(async (message) => {
-        try {
-            const data = JSON.parse(message);
-
-            if (data.type === "setKey") {
-                const { cloudName, apiKey, preset } = data;
-                cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
-                formData.append("upload_preset", preset);
-                formData.append("api_key", apiKey);
-            }
-
-            if (data.type === "trip") {
-                ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
-                await drawBanner(data); // wait for all drawing (including logo)
-
-                ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
-                const imageUrl = await uploadToCloudinary();
-
-                ThunkableWebviewerExtension.postMessage(
-                    JSON.stringify({ type: "image", url: imageUrl })
-                );
-            }
-        } catch (error) {
-            ThunkableWebviewerExtension.postMessage(
-                JSON.stringify({ type: "error", message: error.toString() })
-            );
-        }
-    });
-
-    // Notify Thunkable we’re ready
-    ThunkableWebviewerExtension.postMessage(
-        JSON.stringify({ type: "page loaded" })
-    );
-</script>
-
+  </script>
+</body>
 </html>
