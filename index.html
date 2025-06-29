@@ -29,8 +29,10 @@
 
     return new Promise((resolve) => {
       userImage.onload = () => {
-        // Draw background image to fill canvas
-        ctx.drawImage(userImage, 0, 0, canvas.width, canvas.height);
+        // === Draw background image to fill canvas width ===
+        const aspectRatio = userImage.height / userImage.width;
+        const imageHeight = canvas.width * aspectRatio;
+        ctx.drawImage(userImage, 0, 0, canvas.width, imageHeight);
 
         // === Blue Container ===
         const containerPadding = 10;
@@ -42,7 +44,6 @@
         ctx.fillStyle = "#00FFFF";
         ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
-        // Borders
         ctx.strokeStyle = "black";
         ctx.lineWidth = 0.5;
         ctx.beginPath();
@@ -71,54 +72,52 @@
         ctx.font = "bold 20px sans-serif";
         ctx.fillText(eventName.toUpperCase(), canvas.width / 2, eventY);
 
-        // === Logo Image ===
+        // === Logo Image Below Event Name ===
         const logoImage = new Image();
         logoImage.crossOrigin = "anonymous";
         logoImage.src = logoUrl;
 
         logoImage.onload = () => {
-          const logoHeight = 50;
           const logoWidth = 200;
+          const logoHeight = 50;
           const logoX = (canvas.width - logoWidth) / 2;
           const logoY = eventY + 20;
 
           ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
-          // === Countdown ===
+          // === Countdown Below Logo ===
           const countdownY = logoY + logoHeight + 40;
           ctx.fillStyle = "#fff";
           ctx.textAlign = "left";
           ctx.font = "bold 40px monospace";
           ctx.fillText(`${days}d ${hours}h ${mins}m`, 20, countdownY);
 
-          resolve();
+          resolve(); // ✅ Drawing complete after logo is rendered
         };
 
         logoImage.onerror = () => {
-          console.error("Logo failed to load.");
-          const fallbackY = eventY + 60;
-          const countdownY = fallbackY + 40;
+          console.error("Logo image failed to load.");
 
+          const fallbackY = eventY + 40;
           ctx.fillStyle = "#fff";
           ctx.textAlign = "left";
           ctx.font = "bold 40px monospace";
-          ctx.fillText(`${days}d ${hours}h ${mins}m`, 20, countdownY);
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 20, fallbackY + 40);
 
           resolve();
         };
       };
 
       userImage.onerror = () => {
-        console.error("Main image failed to load.");
+        console.error("Main image failed to load. Drawing fallback.");
         ctx.fillStyle = "#FF2DAE";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = "#fff";
         ctx.font = "bold 20px sans-serif";
         ctx.fillText(cruiseName.toUpperCase(), 20, 100);
-        ctx.font = "16px sans-serif";
         ctx.fillText("DESTINATION: " + destination.toUpperCase(), 20, 140);
-        ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 20, 170);
+        ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 20, 180);
         ctx.font = "bold 40px monospace";
         ctx.fillText(`${days}d ${hours}h ${mins}m`, 20, 250);
 
@@ -149,6 +148,7 @@
     });
   }
 
+  // Handle messages from Thunkable
   ThunkableWebviewerExtension.receiveMessage(async (message) => {
     try {
       const data = JSON.parse(message);
@@ -178,6 +178,7 @@
     }
   });
 
+  // Notify Thunkable we're ready
   ThunkableWebviewerExtension.postMessage(
     JSON.stringify({ type: "page loaded" })
   );
