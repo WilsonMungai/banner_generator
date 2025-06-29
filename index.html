@@ -29,22 +29,28 @@
 
         return new Promise((resolve) => {
             userImage.onload = () => {
-                // Draw background
+                // Background
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Draw user image
-                const imgHeight = 300;
-                const imgWidth = canvas.width;
-                ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
+                // Draw resized user image centered
+                const imgWidth = 430;
+                const imgHeight = 262;
+                const imgX = (canvas.width - imgWidth) / 2;
+                const imgY = 0;
+                ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
 
                 // === Blue Container ===
-                const containerY = imgHeight;
-                const containerHeight = 180;
+                const containerY = imgY + imgHeight + 10;
+                const containerPadding = 20;
+                const lineHeight = 30;
+                const numLines = 3;
+                const containerHeight = containerPadding * 2 + lineHeight * numLines;
+
                 ctx.fillStyle = "#00FFFF";
                 ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
-                // Top and bottom border (0.5px black)
+                // Borders
                 ctx.strokeStyle = "black";
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
@@ -54,27 +60,24 @@
                 ctx.lineTo(canvas.width, containerY + containerHeight);
                 ctx.stroke();
 
-                // Centered text inside blue container
+                // Blue container text
                 ctx.fillStyle = "#000";
                 ctx.textAlign = "center";
+                ctx.font = "bold 16px sans-serif";
 
                 const centerX = canvas.width / 2;
-                const textYStart = containerY + 50;
-                const lineSpacing = 40;
+                const textYStart = containerY + containerPadding + lineHeight / 2;
 
-                ctx.font = "bold 40px sans-serif";
-                ctx.fillText(cruiseName, centerX, textYStart);
-
-                ctx.font = "30px sans-serif";
-                ctx.fillText("Destination: " + destination, centerX, textYStart + lineSpacing);
-                ctx.fillText("Sailing on: " + sailDate, centerX, textYStart + 2 * lineSpacing);
+                ctx.fillText(cruiseName.toUpperCase(), centerX, textYStart);
+                ctx.fillText("DESTINATION: " + destination.toUpperCase(), centerX, textYStart + lineHeight);
+                ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), centerX, textYStart + 2 * lineHeight);
 
                 // === Event Name Below Blue Container ===
-                const eventY = containerY + containerHeight + 50;
+                const eventY = containerY + containerHeight + 40;
                 ctx.fillStyle = "#fff";
                 ctx.textAlign = "center";
-                ctx.font = "bold 60px sans-serif";
-                ctx.fillText(eventName, canvas.width / 2, eventY);
+                ctx.font = "bold 20px sans-serif";
+                ctx.fillText(eventName.toUpperCase(), canvas.width / 2, eventY);
 
                 // === Logo Image Below Event Name ===
                 const logoImage = new Image();
@@ -85,24 +88,22 @@
                     const logoWidth = 400;
                     const logoHeight = 100;
                     const logoX = (canvas.width - logoWidth) / 2;
-                    const logoY = eventY + 40;
+                    const logoY = eventY + 30;
 
                     ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
                     // === Countdown Below Logo ===
-                    const countdownY = logoY + logoHeight + 80;
+                    const countdownY = logoY + logoHeight + 60;
                     ctx.fillStyle = "#fff";
                     ctx.textAlign = "left";
                     ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-                    resolve(); // ✅ Drawing complete after logo is rendered
+                    resolve();
                 };
 
                 logoImage.onerror = () => {
                     console.error("Logo image failed to load.");
-
-                    // fallback countdown position if logo fails
                     const fallbackY = eventY + 80;
                     const countdownY = fallbackY + 100;
 
@@ -111,23 +112,21 @@
                     ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-                    resolve(); // ✅ Still complete even if logo fails
+                    resolve();
                 };
             };
 
             userImage.onerror = () => {
-                console.error("Main image failed to load. Drawing fallback.");
-
-                // Fallback: Just text on pink background
+                console.error("Main image failed to load.");
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.fillStyle = "#fff";
                 ctx.font = "bold 60px sans-serif";
-                ctx.fillText(cruiseName, 50, 100);
+                ctx.fillText(cruiseName.toUpperCase(), 50, 100);
                 ctx.font = "40px sans-serif";
-                ctx.fillText("Destination: " + destination, 50, 180);
-                ctx.fillText("Sailing on: " + sailDate, 50, 250);
+                ctx.fillText("DESTINATION: " + destination.toUpperCase(), 50, 180);
+                ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 50, 250);
                 ctx.font = "bold 100px monospace";
                 ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
 
@@ -158,7 +157,6 @@
         });
     }
 
-    // Handle messages from Thunkable
     ThunkableWebviewerExtension.receiveMessage(async (message) => {
         try {
             const data = JSON.parse(message);
@@ -172,7 +170,7 @@
 
             if (data.type === "trip") {
                 ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
-                await drawBanner(data); // wait for all drawing (including logo)
+                await drawBanner(data);
 
                 ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
                 const imageUrl = await uploadToCloudinary();
@@ -188,7 +186,6 @@
         }
     });
 
-    // Notify Thunkable we’re ready
     ThunkableWebviewerExtension.postMessage(
         JSON.stringify({ type: "page loaded" })
     );
