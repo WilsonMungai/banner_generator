@@ -21,84 +21,91 @@
     let formData = new FormData();
 
     async function drawBanner(data) {
-    const { cruiseName, destination, sailDate, days, hours, mins, imageUrl } = data;
+        const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName } = data;
 
-    const userImage = new Image();
-    userImage.crossOrigin = "anonymous";
-    userImage.src = imageUrl;
+        const userImage = new Image();
+        userImage.crossOrigin = "anonymous";
+        userImage.src = imageUrl;
 
-    return new Promise((resolve) => {
-        userImage.onload = () => {
-            // Draw background
-            ctx.fillStyle = "#FF2DAE";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return new Promise((resolve) => {
+            userImage.onload = () => {
+                // Draw background
+                ctx.fillStyle = "#FF2DAE";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw user image
-            const imgHeight = 300;
-            const imgWidth = canvas.width;
-            ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
+                // Draw user image
+                const imgHeight = 300;
+                const imgWidth = canvas.width;
+                ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
 
-            // === Blue Container ===
-            const containerY = imgHeight;
-            const containerHeight = 180;
-            ctx.fillStyle = "#00FFFF";
-            ctx.fillRect(0, containerY, canvas.width, containerHeight);
+                // === Blue Container ===
+                const containerY = imgHeight;
+                const containerHeight = 180;
+                ctx.fillStyle = "#00FFFF";
+                ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
-            // Top and bottom border (0.5px black)
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(0, containerY);
-            ctx.lineTo(canvas.width, containerY);
-            ctx.moveTo(0, containerY + containerHeight);
-            ctx.lineTo(canvas.width, containerY + containerHeight);
-            ctx.stroke();
+                // Top and bottom border (0.5px black)
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(0, containerY);
+                ctx.lineTo(canvas.width, containerY);
+                ctx.moveTo(0, containerY + containerHeight);
+                ctx.lineTo(canvas.width, containerY + containerHeight);
+                ctx.stroke();
 
-            // Centered text inside blue container
-            ctx.fillStyle = "#000";
-            ctx.textAlign = "center";
+                // Centered text inside blue container
+                ctx.fillStyle = "#000";
+                ctx.textAlign = "center";
 
-            const centerX = canvas.width / 2;
-            const textYStart = containerY + 50;
-            const lineSpacing = 40;
+                const centerX = canvas.width / 2;
+                const textYStart = containerY + 50;
+                const lineSpacing = 40;
 
-            ctx.font = "bold 40px sans-serif";
-            ctx.fillText(cruiseName, centerX, textYStart);
+                ctx.font = "bold 40px sans-serif";
+                ctx.fillText(cruiseName, centerX, textYStart);
 
-            ctx.font = "30px sans-serif";
-            ctx.fillText("Destination: " + destination, centerX, textYStart + lineSpacing);
-            ctx.fillText("Sailing on: " + sailDate, centerX, textYStart + 2 * lineSpacing);
+                ctx.font = "30px sans-serif";
+                ctx.fillText("Destination: " + destination, centerX, textYStart + lineSpacing);
+                ctx.fillText("Sailing on: " + sailDate, centerX, textYStart + 2 * lineSpacing);
 
-            // === Countdown Text Below Container ===
-            const countdownY = containerY + containerHeight + 100;
-            ctx.fillStyle = "#fff";
-            ctx.textAlign = "left";
-            ctx.font = "bold 100px monospace";
-            ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+                // === Event Name Below Blue Container ===
+                const eventY = containerY + containerHeight + 50;
+                ctx.fillStyle = "#fff";
+                ctx.textAlign = "center";
+                ctx.font = "bold 60px sans-serif";
+                ctx.fillText(eventName, canvas.width / 2, eventY);
 
-            resolve();
-        };
+                // === Countdown Text Below Container ===
+                const countdownY = eventY + 100;
+                ctx.fillStyle = "#fff";
+                ctx.textAlign = "left";
+                ctx.font = "bold 100px monospace";
+                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
 
-        userImage.onerror = () => {
-            console.error("Image failed to load. Drawing without it.");
+                resolve();
+            };
 
-            // Draw fallback background
-            ctx.fillStyle = "#FF2DAE";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            userImage.onerror = () => {
+                console.error("Image failed to load. Drawing without it.");
 
-            ctx.fillStyle = "#fff";
-            ctx.font = "bold 60px sans-serif";
-            ctx.fillText(cruiseName, 50, 100);
-            ctx.font = "40px sans-serif";
-            ctx.fillText("Destination: " + destination, 50, 180);
-            ctx.fillText("Sailing on: " + sailDate, 50, 250);
-            ctx.font = "bold 100px monospace";
-            ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
+                // Draw fallback background
+                ctx.fillStyle = "#FF2DAE";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            resolve();
-        };
-    });
-}
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 60px sans-serif";
+                ctx.fillText(cruiseName, 50, 100);
+                ctx.font = "40px sans-serif";
+                ctx.fillText("Destination: " + destination, 50, 180);
+                ctx.fillText("Sailing on: " + sailDate, 50, 250);
+                ctx.font = "bold 100px monospace";
+                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
+
+                resolve();
+            };
+        });
+    }
 
     function uploadToCloudinary() {
         return new Promise((resolve, reject) => {
