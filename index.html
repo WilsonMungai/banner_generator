@@ -20,57 +20,55 @@
     let cloudUrl = "";
     let formData = new FormData();
 
-    function drawBanner({ cruiseName, destination, sailDate, days, hours, mins, imageUrl }) {
-      return new Promise((resolve) => {
-        const userImage = new Image();
-        userImage.crossOrigin = "anonymous";
-        userImage.src = imageUrl;
+    async function drawBanner(data) {
+      const { cruiseName, destination, sailDate, days, hours, mins, imageUrl } = data;
 
-        userImage.onload = () => {
+      // Create the image
+      const userImage = new Image();
+      userImage.crossOrigin = "anonymous";
+      userImage.src = imageUrl;
+
+      return new Promise((resolve) => {
+        userImage.onload = async () => {
           // Draw background
           ctx.fillStyle = "#FF2DAE";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Draw the user image at the top (full width)
-          const imgHeight = 300;
-          const imgWidth = canvas.width;
-          ctx.drawImage(userImage, 0, 0, imgWidth, imgHeight);
+          // Draw image
+          const imgWidth = 300;
+          const imgHeight = 200;
+          const imgX = canvas.width - imgWidth - 50;
+          const imgY = canvas.height - imgHeight - 50;
+          ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
 
-          // Draw text below the image
-          const textYStart = imgHeight + 20;
-          const lineSpacing = 70;
-
+          // Draw text
           ctx.fillStyle = "#fff";
           ctx.font = "bold 60px sans-serif";
-          ctx.fillText(cruiseName, 50, textYStart);
-
+          ctx.fillText(cruiseName, 50, 100);
           ctx.font = "40px sans-serif";
-          ctx.fillText("Destination: " + destination, 50, textYStart + lineSpacing);
-          ctx.fillText("Sailing on: " + sailDate, 50, textYStart + 2 * lineSpacing);
-
+          ctx.fillText("Destination: " + destination, 50, 180);
+          ctx.fillText("Sailing on: " + sailDate, 50, 250);
           ctx.font = "bold 100px monospace";
-          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, textYStart + 3.5 * lineSpacing);
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
 
-          resolve();
+          resolve(); // tell caller we finished drawing
         };
 
         userImage.onerror = () => {
-          console.error("Image failed to load. Proceeding without it.");
+          console.error("Image failed to load. Drawing without it.");
 
+          // Draw fallback
           ctx.fillStyle = "#FF2DAE";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          const textYStart = 100;
-          const lineSpacing = 70;
-
           ctx.fillStyle = "#fff";
           ctx.font = "bold 60px sans-serif";
-          ctx.fillText(cruiseName, 50, textYStart);
+          ctx.fillText(cruiseName, 50, 100);
           ctx.font = "40px sans-serif";
-          ctx.fillText("Destination: " + destination, 50, textYStart + lineSpacing);
-          ctx.fillText("Sailing on: " + sailDate, 50, textYStart + 2 * lineSpacing);
+          ctx.fillText("Destination: " + destination, 50, 180);
+          ctx.fillText("Sailing on: " + sailDate, 50, 250);
           ctx.font = "bold 100px monospace";
-          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, textYStart + 3.5 * lineSpacing);
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
 
           resolve();
         };
@@ -99,10 +97,11 @@
       });
     }
 
-    // Receive trip info from Thunkable
+    // Handle messages from Thunkable
     ThunkableWebviewerExtension.receiveMessage(async (message) => {
       try {
         const data = JSON.parse(message);
+
         if (data.type === "setKey") {
           const { cloudName, apiKey, preset } = data;
           cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
@@ -111,13 +110,10 @@
         }
 
         if (data.type === "trip") {
-          await drawBanner(data); // ✅ Wait for canvas to finish rendering
+          ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
+          await drawBanner(data); // wait for image to draw
 
-          // Inform Thunkable that upload is starting
-          ThunkableWebviewerExtension.postMessage(
-            JSON.stringify({ type: "uploading" })
-          );
-
+          ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
           const imageUrl = await uploadToCloudinary();
 
           ThunkableWebviewerExtension.postMessage(
@@ -131,7 +127,7 @@
       }
     });
 
-    // Notify Thunkable we're ready
+    // Notify Thunkable we’re ready
     ThunkableWebviewerExtension.postMessage(
       JSON.stringify({ type: "page loaded" })
     );
