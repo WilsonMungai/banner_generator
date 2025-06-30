@@ -50,12 +50,9 @@
                     "SAILING ON: " + sailDate.toUpperCase()
                 ];
 
-                // Text layout metrics
                 const metrics = ctx.measureText("M");
                 const lineHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
                 const paddingBetweenLines = 8;
-
-                // Custom padding: 8px above first line, 8px below last line
                 const topPadding = 8;
                 const bottomPadding = 8;
 
@@ -77,20 +74,26 @@
                 ctx.lineTo(canvas.width, containerY + containerHeight);
                 ctx.stroke();
 
-                // Draw text lines
+                // Draw cruise info lines
                 ctx.fillStyle = "#000";
                 for (let i = 0; i < lines.length; i++) {
                     const lineY = containerY + topPadding + i * (lineHeight + paddingBetweenLines) + lineHeight;
                     ctx.fillText(lines[i], centerX, lineY);
                 }
 
-                // Event name
-                const eventY = containerY + containerHeight + 40;
+                // White section below blue (for eventName, logo, countdown)
+                const whiteSectionY = containerY + containerHeight;
                 ctx.fillStyle = "#fff";
+                ctx.fillRect(0, whiteSectionY, canvas.width, canvas.height - whiteSectionY);
+
+                // Event name
+                const eventY = whiteSectionY + 40;
+                ctx.fillStyle = "#FF009E";
                 ctx.font = "bold 20px sans-serif";
+                ctx.textAlign = "center";
                 ctx.fillText(eventName.toUpperCase(), centerX, eventY);
 
-                // Logo
+                // Load logo
                 const logoImage = new Image();
                 logoImage.crossOrigin = "anonymous";
                 logoImage.src = logoUrl;
@@ -105,7 +108,7 @@
 
                     // Countdown
                     const countdownY = logoY + logoHeight + 60;
-                    ctx.fillStyle = "#fff";
+                    ctx.fillStyle = "#000";
                     ctx.textAlign = "left";
                     ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
@@ -116,7 +119,7 @@
                 logoImage.onerror = () => {
                     const fallbackY = eventY + 80;
                     const countdownY = fallbackY + 100;
-                    ctx.fillStyle = "#fff";
+                    ctx.fillStyle = "#000";
                     ctx.textAlign = "left";
                     ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
