@@ -55,13 +55,27 @@
         const offsetY = (targetHeight - drawHeight) / 2;
         ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
 
-        // Blue container
-        const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
-        const containerPadding = 20;
-        const lineHeight = 30;
-        const numLines = 3;
-        const containerHeight = containerPadding * 2 + lineHeight * numLines;
+        // Cruise info text
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "center";
+        ctx.font = "bold 16px sans-serif";
 
+        const centerX = canvas.width / 2;
+        const lines = [
+          cruiseName.toUpperCase(),
+          "DESTINATION: " + destination.toUpperCase(),
+          "SAILING ON: " + sailDate.toUpperCase()
+        ];
+
+        // Calculate line height
+        const metrics = ctx.measureText("M");
+        const lineHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + 2;
+        const padding = 6;
+        const totalTextHeight = lines.length * lineHeight;
+        const containerHeight = totalTextHeight + 2 * padding;
+        const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
+
+        // Draw blue container
         ctx.fillStyle = "#00FFFF";
         ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
@@ -74,19 +88,14 @@
         ctx.lineTo(canvas.width, containerY + containerHeight);
         ctx.stroke();
 
-        // Cruise info text
+        // Draw lines inside container
         ctx.fillStyle = "#000";
-        ctx.textAlign = "center";
-        ctx.font = "bold 16px sans-serif";
-        const centerX = canvas.width / 2;
-        const textYStart = containerY + containerPadding + lineHeight / 2;
-
-        ctx.fillText(cruiseName.toUpperCase(), centerX, textYStart);
-        ctx.fillText("DESTINATION: " + destination.toUpperCase(), centerX, textYStart + lineHeight);
-        ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), centerX, textYStart + 2 * lineHeight);
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], centerX, containerY + padding + (i + 1) * lineHeight);
+        }
 
         // Event name
-        const eventY = containerY + containerHeight + 40;
+        const eventY = containerY + containerHeight + 30;
         ctx.fillStyle = "#fff";
         ctx.font = "bold 20px sans-serif";
         ctx.fillText(eventName.toUpperCase(), centerX, eventY);
