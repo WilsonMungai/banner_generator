@@ -10,7 +10,7 @@
 </head>
 
 <body style="margin: 0; background-color: #000; color: #fff;">
-    <canvas id="bannerCanvas" width="1200" height="630"></canvas>
+    <canvas id="bannerCanvas" width="430" height="630"></canvas>
 </body>
 
 <script>
@@ -34,9 +34,9 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 // Draw resized user image centered
-                const imgWidth = 430;
+                const imgWidth = canvas.width; // Now 430
                 const imgHeight = 262;
-                const imgX = (canvas.width - imgWidth) / 2;
+                const imgX = 0; // Image fills from left to right
                 const imgY = 0;
                 ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
 
