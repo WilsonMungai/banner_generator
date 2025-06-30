@@ -23,39 +23,38 @@
     async function drawBanner(data) {
         const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName, logoUrl } = data;
 
+        const IMAGE_Y = 0;
+        const IMAGE_HEIGHT = 262;
+
         const userImage = new Image();
         userImage.crossOrigin = "anonymous";
         userImage.src = imageUrl;
 
         return new Promise((resolve) => {
             userImage.onload = () => {
-                // Background
+                // Background fill
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // Crop and draw main image
                 const targetWidth = canvas.width;
-                const targetHeight = 262;
-
                 const aspectRatio = userImage.width / userImage.height;
-                const targetRatio = targetWidth / targetHeight;
+                const targetRatio = targetWidth / IMAGE_HEIGHT;
 
                 let srcWidth, srcHeight, srcX, srcY;
 
                 if (aspectRatio > targetRatio) {
-                    // Image is wider than target — crop horizontally
                     srcHeight = userImage.height;
-                    srcWidth = userImage.height * targetRatio;
+                    srcWidth = srcHeight * targetRatio;
                     srcX = (userImage.width - srcWidth) / 2;
                     srcY = 0;
                 } else {
-                    // Image is taller — crop vertically
                     srcWidth = userImage.width;
-                    srcHeight = userImage.width / targetRatio;
+                    srcHeight = srcWidth / targetRatio;
                     srcX = 0;
                     srcY = (userImage.height - srcHeight) / 2;
                 }
 
-                // Draw the cropped image
                 ctx.drawImage(
                     userImage,
                     srcX,
@@ -63,13 +62,13 @@
                     srcWidth,
                     srcHeight,
                     0,
-                    0,
+                    IMAGE_Y,
                     targetWidth,
-                    targetHeight
+                    IMAGE_HEIGHT
                 );
 
-                // === Blue Container ===
-                const containerY = imgY + imgHeight + 10;
+                // Blue container
+                const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
                 const containerPadding = 20;
                 const lineHeight = 30;
                 const numLines = 3;
@@ -78,7 +77,6 @@
                 ctx.fillStyle = "#00FFFF";
                 ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
-                // Borders
                 ctx.strokeStyle = "black";
                 ctx.lineWidth = 0.5;
                 ctx.beginPath();
@@ -88,11 +86,10 @@
                 ctx.lineTo(canvas.width, containerY + containerHeight);
                 ctx.stroke();
 
-                // Blue container text
+                // Cruise info text
                 ctx.fillStyle = "#000";
                 ctx.textAlign = "center";
                 ctx.font = "bold 16px sans-serif";
-
                 const centerX = canvas.width / 2;
                 const textYStart = containerY + containerPadding + lineHeight / 2;
 
@@ -100,14 +97,13 @@
                 ctx.fillText("DESTINATION: " + destination.toUpperCase(), centerX, textYStart + lineHeight);
                 ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), centerX, textYStart + 2 * lineHeight);
 
-                // === Event Name Below Blue Container ===
+                // Event name
                 const eventY = containerY + containerHeight + 40;
                 ctx.fillStyle = "#fff";
-                ctx.textAlign = "center";
                 ctx.font = "bold 20px sans-serif";
-                ctx.fillText(eventName.toUpperCase(), canvas.width / 2, eventY);
+                ctx.fillText(eventName.toUpperCase(), centerX, eventY);
 
-                // === Logo Image Below Event Name ===
+                // Logo
                 const logoImage = new Image();
                 logoImage.crossOrigin = "anonymous";
                 logoImage.src = logoUrl;
@@ -120,7 +116,7 @@
 
                     ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
-                    // === Countdown Below Logo ===
+                    // Countdown
                     const countdownY = logoY + logoHeight + 60;
                     ctx.fillStyle = "#fff";
                     ctx.textAlign = "left";
@@ -131,15 +127,12 @@
                 };
 
                 logoImage.onerror = () => {
-                    console.error("Logo image failed to load.");
                     const fallbackY = eventY + 80;
                     const countdownY = fallbackY + 100;
-
                     ctx.fillStyle = "#fff";
                     ctx.textAlign = "left";
                     ctx.font = "bold 100px monospace";
                     ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
-
                     resolve();
                 };
             };
@@ -157,7 +150,6 @@
                 ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 50, 250);
                 ctx.font = "bold 100px monospace";
                 ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
-
                 resolve();
             };
         });
@@ -173,11 +165,7 @@
                         body: formData,
                     });
                     const result = await response.json();
-                    if (result.secure_url) {
-                        resolve(result.secure_url);
-                    } else {
-                        reject(result.error.message);
-                    }
+                    result.secure_url ? resolve(result.secure_url) : reject(result.error.message);
                 } catch (error) {
                     reject(error.message);
                 }
@@ -214,9 +202,7 @@
         }
     });
 
-    ThunkableWebviewerExtension.postMessage(
-        JSON.stringify({ type: "page loaded" })
-    );
+    ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "page loaded" }));
 </script>
 
 </html>
