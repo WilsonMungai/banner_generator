@@ -32,28 +32,11 @@
 
     return new Promise((resolve) => {
       userImage.onload = () => {
-        // Fill background
+        // Background fill
         ctx.fillStyle = "#FF2DAE";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw user image (cover style)
-        const imgAspect = userImage.width / userImage.height;
-        const targetWidth = canvas.width;
-        const targetHeight = IMAGE_HEIGHT;
-        const targetAspect = targetWidth / targetHeight;
-
-        let drawWidth, drawHeight;
-        if (imgAspect > targetAspect) {
-          drawHeight = targetHeight;
-          drawWidth = drawHeight * imgAspect;
-        } else {
-          drawWidth = targetWidth;
-          drawHeight = drawWidth / imgAspect;
-        }
-
-        const offsetX = (targetWidth - drawWidth) / 2;
-        const offsetY = (targetHeight - drawHeight) / 2;
-        ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
+        ctx.drawImage(userImage, 0, IMAGE_Y, canvas.width, IMAGE_HEIGHT);
 
         // Cruise info text
         ctx.fillStyle = "#000";
@@ -67,18 +50,21 @@
           "SAILING ON: " + sailDate.toUpperCase()
         ];
 
-        // Calculate line height
+        // Text layout metrics
         const metrics = ctx.measureText("M");
-        const lineHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + 2;
-        const padding = 6;
-        const totalTextHeight = lines.length * lineHeight;
-        const containerHeight = totalTextHeight + 2 * padding;
+        const lineHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+        const paddingBetweenLines = 8;
+        const topBottomPadding = 6;
+
+        const totalTextHeight = lines.length * lineHeight + (lines.length - 1) * paddingBetweenLines;
+        const containerHeight = totalTextHeight + 2 * topBottomPadding;
         const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
 
-        // Draw blue container
+        // Blue container
         ctx.fillStyle = "#00FFFF";
         ctx.fillRect(0, containerY, canvas.width, containerHeight);
 
+        // Top and bottom black lines
         ctx.strokeStyle = "black";
         ctx.lineWidth = 0.5;
         ctx.beginPath();
@@ -88,19 +74,20 @@
         ctx.lineTo(canvas.width, containerY + containerHeight);
         ctx.stroke();
 
-        // Draw lines inside container
+        // Draw text lines
         ctx.fillStyle = "#000";
         for (let i = 0; i < lines.length; i++) {
-          ctx.fillText(lines[i], centerX, containerY + padding + (i + 1) * lineHeight);
+          const lineY = containerY + topBottomPadding + i * (lineHeight + paddingBetweenLines) + lineHeight;
+          ctx.fillText(lines[i], centerX, lineY);
         }
 
         // Event name
-        const eventY = containerY + containerHeight + 30;
+        const eventY = containerY + containerHeight + 40;
         ctx.fillStyle = "#fff";
         ctx.font = "bold 20px sans-serif";
         ctx.fillText(eventName.toUpperCase(), centerX, eventY);
 
-        // Load and draw logo
+        // Logo
         const logoImage = new Image();
         logoImage.crossOrigin = "anonymous";
         logoImage.src = logoUrl;
@@ -113,7 +100,7 @@
 
           ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
 
-          // Countdown text
+          // Countdown
           const countdownY = logoY + logoHeight + 60;
           ctx.fillStyle = "#fff";
           ctx.textAlign = "left";
