@@ -2,194 +2,195 @@
 <html>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"
-        type="text/javascript"></script>
-    <title>Cruise Countdown Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"
+    type="text/javascript"></script>
+  <title>Cruise Countdown Generator</title>
 </head>
 
 <body style="margin: 0; background-color: #000; color: #fff;">
-    <canvas id="bannerCanvas" width="430" height="630"></canvas>
+  <canvas id="bannerCanvas" width="430" height="630"></canvas>
 </body>
 
 <script>
-    const canvas = document.getElementById("bannerCanvas");
-    const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("bannerCanvas");
+  const ctx = canvas.getContext("2d");
 
-    let cloudUrl = "";
-    let formData = new FormData();
+  let cloudUrl = "";
+  let formData = new FormData();
 
-    async function drawBanner(data) {
-        const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName, logoUrl } = data;
+  async function drawBanner(data) {
+    const { cruiseName, destination, sailDate, days, hours, mins, imageUrl, eventName, logoUrl } = data;
 
-        const IMAGE_Y = 0;
-        const IMAGE_HEIGHT = 262;
+    const IMAGE_Y = 0;
+    const IMAGE_HEIGHT = 262;
 
-        const userImage = new Image();
-        userImage.crossOrigin = "anonymous";
-        userImage.src = imageUrl;
+    const userImage = new Image();
+    userImage.crossOrigin = "anonymous";
+    userImage.src = imageUrl;
 
-        return new Promise((resolve) => {
-            userImage.onload = () => {
-                // Background fill
-                ctx.fillStyle = "#FF2DAE";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return new Promise((resolve) => {
+      userImage.onload = () => {
+        // Fill background
+        ctx.fillStyle = "#FF2DAE";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Calculate cover dimensions
-                const imgAspect = image.width / image.height;
-                const circleAspect = 1; // square bounding box for the hexagon
+        // Draw user image (cover style)
+        const imgAspect = userImage.width / userImage.height;
+        const targetWidth = canvas.width;
+        const targetHeight = IMAGE_HEIGHT;
+        const targetAspect = targetWidth / targetHeight;
 
-                let drawWidth, drawHeight;
-                if (imgAspect > circleAspect) {
-                    drawWidth = boundingDiameter * imgAspect;
-                    drawHeight = boundingDiameter;
-                } else {
-                    drawWidth = boundingDiameter;
-                    drawHeight = boundingDiameter / imgAspect;
-                }
-
-                const x = hexCenterX - drawWidth / 2;
-                const y = hexCenterY - drawHeight / 2;
-
-                ctx.drawImage(image, x, y, drawWidth, drawHeight);
-
-                // Blue container
-                const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
-                const containerPadding = 20;
-                const lineHeight = 30;
-                const numLines = 3;
-                const containerHeight = containerPadding * 2 + lineHeight * numLines;
-
-                ctx.fillStyle = "#00FFFF";
-                ctx.fillRect(0, containerY, canvas.width, containerHeight);
-
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(0, containerY);
-                ctx.lineTo(canvas.width, containerY);
-                ctx.moveTo(0, containerY + containerHeight);
-                ctx.lineTo(canvas.width, containerY + containerHeight);
-                ctx.stroke();
-
-                // Cruise info text
-                ctx.fillStyle = "#000";
-                ctx.textAlign = "center";
-                ctx.font = "bold 16px sans-serif";
-                const centerX = canvas.width / 2;
-                const textYStart = containerY + containerPadding + lineHeight / 2;
-
-                ctx.fillText(cruiseName.toUpperCase(), centerX, textYStart);
-                ctx.fillText("DESTINATION: " + destination.toUpperCase(), centerX, textYStart + lineHeight);
-                ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), centerX, textYStart + 2 * lineHeight);
-
-                // Event name
-                const eventY = containerY + containerHeight + 40;
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 20px sans-serif";
-                ctx.fillText(eventName.toUpperCase(), centerX, eventY);
-
-                // Logo
-                const logoImage = new Image();
-                logoImage.crossOrigin = "anonymous";
-                logoImage.src = logoUrl;
-
-                logoImage.onload = () => {
-                    const logoWidth = 400;
-                    const logoHeight = 100;
-                    const logoX = (canvas.width - logoWidth) / 2;
-                    const logoY = eventY + 30;
-
-                    ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
-
-                    // Countdown
-                    const countdownY = logoY + logoHeight + 60;
-                    ctx.fillStyle = "#fff";
-                    ctx.textAlign = "left";
-                    ctx.font = "bold 100px monospace";
-                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
-
-                    resolve();
-                };
-
-                logoImage.onerror = () => {
-                    const fallbackY = eventY + 80;
-                    const countdownY = fallbackY + 100;
-                    ctx.fillStyle = "#fff";
-                    ctx.textAlign = "left";
-                    ctx.font = "bold 100px monospace";
-                    ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
-                    resolve();
-                };
-            };
-
-            userImage.onerror = () => {
-                console.error("Main image failed to load.");
-                ctx.fillStyle = "#FF2DAE";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 60px sans-serif";
-                ctx.fillText(cruiseName.toUpperCase(), 50, 100);
-                ctx.font = "40px sans-serif";
-                ctx.fillText("DESTINATION: " + destination.toUpperCase(), 50, 180);
-                ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 50, 250);
-                ctx.font = "bold 100px monospace";
-                ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
-                resolve();
-            };
-        });
-    }
-
-    function uploadToCloudinary() {
-        return new Promise((resolve, reject) => {
-            canvas.toBlob(async (blob) => {
-                formData.set("file", blob);
-                try {
-                    const response = await fetch(cloudUrl, {
-                        method: "POST",
-                        body: formData,
-                    });
-                    const result = await response.json();
-                    result.secure_url ? resolve(result.secure_url) : reject(result.error.message);
-                } catch (error) {
-                    reject(error.message);
-                }
-            }, "image/png");
-        });
-    }
-
-    ThunkableWebviewerExtension.receiveMessage(async (message) => {
-        try {
-            const data = JSON.parse(message);
-
-            if (data.type === "setKey") {
-                const { cloudName, apiKey, preset } = data;
-                cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
-                formData.append("upload_preset", preset);
-                formData.append("api_key", apiKey);
-            }
-
-            if (data.type === "trip") {
-                ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
-                await drawBanner(data);
-
-                ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
-                const imageUrl = await uploadToCloudinary();
-
-                ThunkableWebviewerExtension.postMessage(
-                    JSON.stringify({ type: "image", url: imageUrl })
-                );
-            }
-        } catch (error) {
-            ThunkableWebviewerExtension.postMessage(
-                JSON.stringify({ type: "error", message: error.toString() })
-            );
+        let drawWidth, drawHeight;
+        if (imgAspect > targetAspect) {
+          drawHeight = targetHeight;
+          drawWidth = drawHeight * imgAspect;
+        } else {
+          drawWidth = targetWidth;
+          drawHeight = drawWidth / imgAspect;
         }
-    });
 
-    ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "page loaded" }));
+        const offsetX = (targetWidth - drawWidth) / 2;
+        const offsetY = (targetHeight - drawHeight) / 2;
+        ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
+
+        // Blue container
+        const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
+        const containerPadding = 20;
+        const lineHeight = 30;
+        const numLines = 3;
+        const containerHeight = containerPadding * 2 + lineHeight * numLines;
+
+        ctx.fillStyle = "#00FFFF";
+        ctx.fillRect(0, containerY, canvas.width, containerHeight);
+
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, containerY);
+        ctx.lineTo(canvas.width, containerY);
+        ctx.moveTo(0, containerY + containerHeight);
+        ctx.lineTo(canvas.width, containerY + containerHeight);
+        ctx.stroke();
+
+        // Cruise info text
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "center";
+        ctx.font = "bold 16px sans-serif";
+        const centerX = canvas.width / 2;
+        const textYStart = containerY + containerPadding + lineHeight / 2;
+
+        ctx.fillText(cruiseName.toUpperCase(), centerX, textYStart);
+        ctx.fillText("DESTINATION: " + destination.toUpperCase(), centerX, textYStart + lineHeight);
+        ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), centerX, textYStart + 2 * lineHeight);
+
+        // Event name
+        const eventY = containerY + containerHeight + 40;
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 20px sans-serif";
+        ctx.fillText(eventName.toUpperCase(), centerX, eventY);
+
+        // Load and draw logo
+        const logoImage = new Image();
+        logoImage.crossOrigin = "anonymous";
+        logoImage.src = logoUrl;
+
+        logoImage.onload = () => {
+          const logoWidth = 400;
+          const logoHeight = 100;
+          const logoX = (canvas.width - logoWidth) / 2;
+          const logoY = eventY + 30;
+
+          ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+
+          // Countdown text
+          const countdownY = logoY + logoHeight + 60;
+          ctx.fillStyle = "#fff";
+          ctx.textAlign = "left";
+          ctx.font = "bold 100px monospace";
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+
+          resolve();
+        };
+
+        logoImage.onerror = () => {
+          const fallbackY = eventY + 80;
+          const countdownY = fallbackY + 100;
+          ctx.fillStyle = "#fff";
+          ctx.textAlign = "left";
+          ctx.font = "bold 100px monospace";
+          ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, countdownY);
+          resolve();
+        };
+      };
+
+      userImage.onerror = () => {
+        console.error("Main image failed to load.");
+        ctx.fillStyle = "#FF2DAE";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 60px sans-serif";
+        ctx.fillText(cruiseName.toUpperCase(), 50, 100);
+        ctx.font = "40px sans-serif";
+        ctx.fillText("DESTINATION: " + destination.toUpperCase(), 50, 180);
+        ctx.fillText("SAILING ON: " + sailDate.toUpperCase(), 50, 250);
+        ctx.font = "bold 100px monospace";
+        ctx.fillText(`${days}d ${hours}h ${mins}m`, 50, 400);
+        resolve();
+      };
+    });
+  }
+
+  function uploadToCloudinary() {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(async (blob) => {
+        formData.set("file", blob);
+        try {
+          const response = await fetch(cloudUrl, {
+            method: "POST",
+            body: formData,
+          });
+          const result = await response.json();
+          result.secure_url ? resolve(result.secure_url) : reject(result.error.message);
+        } catch (error) {
+          reject(error.message);
+        }
+      }, "image/png");
+    });
+  }
+
+  ThunkableWebviewerExtension.receiveMessage(async (message) => {
+    try {
+      const data = JSON.parse(message);
+
+      if (data.type === "setKey") {
+        const { cloudName, apiKey, preset } = data;
+        cloudUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+        formData.append("upload_preset", preset);
+        formData.append("api_key", apiKey);
+      }
+
+      if (data.type === "trip") {
+        ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "drawing" }));
+        await drawBanner(data);
+
+        ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "uploading" }));
+        const imageUrl = await uploadToCloudinary();
+
+        ThunkableWebviewerExtension.postMessage(
+          JSON.stringify({ type: "image", url: imageUrl })
+        );
+      }
+    } catch (error) {
+      ThunkableWebviewerExtension.postMessage(
+        JSON.stringify({ type: "error", message: error.toString() })
+      );
+    }
+  });
+
+  ThunkableWebviewerExtension.postMessage(JSON.stringify({ type: "page loaded" }));
 </script>
 
 </html>
