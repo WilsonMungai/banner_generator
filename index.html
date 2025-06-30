@@ -36,36 +36,27 @@
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Crop and draw main image
-                const targetWidth = canvas.width;
-                const aspectRatio = userImage.width / userImage.height;
-                const targetRatio = targetWidth / IMAGE_HEIGHT;
+                // Draw entire image scaled to fit (contain), possibly with letterboxing
+                const imgAspect = userImage.width / userImage.height;
+                const canvasAspect = canvas.width / IMAGE_HEIGHT;
 
-                let srcWidth, srcHeight, srcX, srcY;
+                let drawWidth, drawHeight, drawX, drawY;
 
-                if (aspectRatio > targetRatio) {
-                    srcHeight = userImage.height;
-                    srcWidth = srcHeight * targetRatio;
-                    srcX = (userImage.width - srcWidth) / 2;
-                    srcY = 0;
+                if (imgAspect > canvasAspect) {
+                    // Image is wider than canvas area
+                    drawWidth = canvas.width;
+                    drawHeight = canvas.width / imgAspect;
+                    drawX = 0;
+                    drawY = IMAGE_Y + (IMAGE_HEIGHT - drawHeight) / 2;
                 } else {
-                    srcWidth = userImage.width;
-                    srcHeight = srcWidth / targetRatio;
-                    srcX = 0;
-                    srcY = (userImage.height - srcHeight) / 2;
+                    // Image is taller than canvas area
+                    drawHeight = IMAGE_HEIGHT;
+                    drawWidth = IMAGE_HEIGHT * imgAspect;
+                    drawX = (canvas.width - drawWidth) / 2;
+                    drawY = IMAGE_Y;
                 }
 
-                ctx.drawImage(
-                    userImage,
-                    srcX,
-                    srcY,
-                    srcWidth,
-                    srcHeight,
-                    0,
-                    IMAGE_Y,
-                    targetWidth,
-                    IMAGE_HEIGHT
-                );
+                ctx.drawImage(userImage, drawX, drawY, drawWidth, drawHeight);
 
                 // Blue container
                 const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
