@@ -33,12 +33,40 @@
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Draw resized user image centered
-                const imgWidth = canvas.width; // Now 430
-                const imgHeight = 262;
-                const imgX = 0; // Image fills from left to right
-                const imgY = 0;
-                ctx.drawImage(userImage, imgX, imgY, imgWidth, imgHeight);
+                const targetWidth = canvas.width;
+                const targetHeight = 262;
+
+                const aspectRatio = userImage.width / userImage.height;
+                const targetRatio = targetWidth / targetHeight;
+
+                let srcWidth, srcHeight, srcX, srcY;
+
+                if (aspectRatio > targetRatio) {
+                    // Image is wider than target — crop horizontally
+                    srcHeight = userImage.height;
+                    srcWidth = userImage.height * targetRatio;
+                    srcX = (userImage.width - srcWidth) / 2;
+                    srcY = 0;
+                } else {
+                    // Image is taller — crop vertically
+                    srcWidth = userImage.width;
+                    srcHeight = userImage.width / targetRatio;
+                    srcX = 0;
+                    srcY = (userImage.height - srcHeight) / 2;
+                }
+
+                // Draw the cropped image
+                ctx.drawImage(
+                    userImage,
+                    srcX,
+                    srcY,
+                    srcWidth,
+                    srcHeight,
+                    0,
+                    0,
+                    targetWidth,
+                    targetHeight
+                );
 
                 // === Blue Container ===
                 const containerY = imgY + imgHeight + 10;
