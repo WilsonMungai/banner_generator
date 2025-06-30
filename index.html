@@ -36,27 +36,23 @@
                 ctx.fillStyle = "#FF2DAE";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Draw entire image scaled to fit (contain), possibly with letterboxing
-                const imgAspect = userImage.width / userImage.height;
-                const canvasAspect = canvas.width / IMAGE_HEIGHT;
+                // Calculate cover dimensions
+                const imgAspect = image.width / image.height;
+                const circleAspect = 1; // square bounding box for the hexagon
 
-                let drawWidth, drawHeight, drawX, drawY;
-
-                if (imgAspect > canvasAspect) {
-                    // Image is wider than canvas area
-                    drawWidth = canvas.width;
-                    drawHeight = canvas.width / imgAspect;
-                    drawX = 0;
-                    drawY = IMAGE_Y + (IMAGE_HEIGHT - drawHeight) / 2;
+                let drawWidth, drawHeight;
+                if (imgAspect > circleAspect) {
+                    drawWidth = boundingDiameter * imgAspect;
+                    drawHeight = boundingDiameter;
                 } else {
-                    // Image is taller than canvas area
-                    drawHeight = IMAGE_HEIGHT;
-                    drawWidth = IMAGE_HEIGHT * imgAspect;
-                    drawX = (canvas.width - drawWidth) / 2;
-                    drawY = IMAGE_Y;
+                    drawWidth = boundingDiameter;
+                    drawHeight = boundingDiameter / imgAspect;
                 }
 
-                ctx.drawImage(userImage, drawX, drawY, drawWidth, drawHeight);
+                const x = hexCenterX - drawWidth / 2;
+                const y = hexCenterY - drawHeight / 2;
+
+                ctx.drawImage(image, x, y, drawWidth, drawHeight);
 
                 // Blue container
                 const containerY = IMAGE_Y + IMAGE_HEIGHT + 10;
